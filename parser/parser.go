@@ -3,7 +3,6 @@ package parser
 import (
 	"bytes"
 	"encoding/binary"
-	"fmt"
 	"os"
 )
 
@@ -65,8 +64,6 @@ func ParseBlock(file *os.File, magicBytes []byte) (block, error) {
 	// 	     │	  │    ├ script length  - var_int
 	// 	     │	  │    └ pkscript       - script length
 	// 	     │	  └ locktime            - 4 bytes
-
-	fmt.Print("Reading Block...\n")
 
 	data := make([]byte, 4)
 	file.Read(data) // reading magic bytes
