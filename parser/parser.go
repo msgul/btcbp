@@ -46,7 +46,7 @@ func ParseBlock(file *os.File, magicBytes []byte) (block, error) {
 	//	├ Block Size                    - 4 bytes
 	//	├ block header                  - 80 bytes
 	//	│   └┬ version                  - 4 bytes
-	//	│	 ├ hash previous block      - 32 bytes
+	//	│    ├ hash previous block      - 32 bytes
 	//	│    ├ hash merkle root         - 32 bytes
 	//	│    ├ time                     - 4 bytes
 	//	│    ├ bits                     - 4 bytes
