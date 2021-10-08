@@ -6,7 +6,7 @@ import (
 	"os"
 )
 
-// ReverseBytes falan
+// ReverseBytes
 func ReverseBytes(arr []byte) []byte {
 	length := len(arr)
 	for i := 0; i < length/2; i++ {
@@ -36,128 +36,104 @@ func ReadVarInt(file *os.File) int {
 	return vi
 }
 
-// ParseBlock falan
-func ParseBlock(file *os.File, magicBytes []byte) (block, error) {
-	var b block
-	// src: https://en.bitcoin.it/wiki/Protocol_documentation //
-
-	//	 [Block Parts]                    [Size]
-	//	├ magic bytes                   - 4 bytes
-	//	├ Block Size                    - 4 bytes
-	//	├ block header                  - 80 bytes
-	//	│   └┬ version                  - 4 bytes
-	//	│    ├ hash previous block      - 32 bytes
-	//	│    ├ hash merkle root         - 32 bytes
-	//	│    ├ time                     - 4 bytes
-	//	│    ├ bits                     - 4 bytes
-	//	│    └ nonce                    - 4 bytes
-	//	├ for tx count                  - var_int
-	//	     ├ tx data                  - remainder
-	// 	     │	 └┬ version             - 4 bytes
-	// 	     │	  ├ for input count     - var_int
-	// 	     │	  │    ├ tx out hash    - 32 bytes
-	// 	     │	  │    ├ tx out index   - 4 bytes
-	// 	     │	  │    ├ script length  - var_int
-	// 	     │	  │    └ sigscript      - script length
-	// 	     │	  ├ for output count    - var_int
-	// 	     │	  │    ├ value          - 8 bytes
-	// 	     │	  │    ├ script length  - var_int
-	// 	     │	  │    └ pkscript       - script length
-	// 	     │	  └ locktime            - 4 bytes
+// ParseBlock
+func ParseBlock(file *os.File, magicBytes []byte) (Block, error) {
 
 	data := make([]byte, 4)
 	file.Read(data) // reading magic bytes
+
+	var b Block
 
 	if !bytes.Equal(data, magicBytes) {
 		return b, nil
 	}
 
 	file.Read(data) // reading block size
-	b.blockSize = binary.LittleEndian.Uint32(data)
+	b.BlockSize = binary.LittleEndian.Uint32(data)
 
 	// -----------  BLOCK HEADER  ----------- //
 
 	file.Read(data) // reading version
-	b.version = binary.LittleEndian.Uint32(data)
+	b.Version = binary.LittleEndian.Uint32(data)
 
-	b.hashPrevBlock = make([]byte, 32)
-	file.Read(b.hashPrevBlock) // reading prev block hash
+	b.HashPrevBlock = make([]byte, 32)
+	file.Read(b.HashPrevBlock) // reading prev block hash
 
-	b.hashMerkleRoot = make([]byte, 32)
-	file.Read(b.hashMerkleRoot) // reading merkle root
+	b.HashMerkleRoot = make([]byte, 32)
+	file.Read(b.HashMerkleRoot) // reading merkle root
 
 	file.Read(data) // reading Timestamp
-	b.time = binary.LittleEndian.Uint32(data)
+	b.Time = binary.LittleEndian.Uint32(data)
 
 	file.Read(data) // reading difficulty target
-	b.bits = binary.LittleEndian.Uint32(data)
+	b.Bits = binary.LittleEndian.Uint32(data)
 
 	file.Read(data) // reading nonce
-	b.nonce = binary.LittleEndian.Uint32(data)
+	b.Nonce = binary.LittleEndian.Uint32(data)
 
-	b.tCount = ReadVarInt(file)
+	b.TCount = ReadVarInt(file)
 
 	// -----------  TRANSACTOINS  ----------- //
 
-	for i := 0; i < b.tCount; i++ {
+	for i := 0; i < b.TCount; i++ {
 
-		var t transaction
+		var t Transaction
 
 		data = make([]byte, 4)
 		file.Read(data) // reading version
-		t.version = binary.LittleEndian.Uint32(data)
+		t.Version = binary.LittleEndian.Uint32(data)
 
-		t.inCount = ReadVarInt(file)
+		t.InCount = ReadVarInt(file)
 
 		// -----------  INPUTS  ----------- //
 
-		for i := 0; i < t.inCount; i++ {
+		for i := 0; i < t.InCount; i++ {
 
-			var i txIn
+			var i TxIn
 
-			i.outHash = make([]byte, 32)
-			file.Read(i.outHash) // reading tx out hash
+			i.OutHash = make([]byte, 32)
+			file.Read(i.OutHash) // reading tx out hash
 
-			i.outIndex = make([]byte, 4)
-			file.Read(i.outIndex) // Tx out index
+			i.OutIndex = make([]byte, 4)
+			file.Read(i.OutIndex) // Tx out index
 
-			i.sciptLen = ReadVarInt(file)
+			i.SciptLen = ReadVarInt(file)
 
-			i.script = make([]byte, i.sciptLen)
-			file.Read(i.script) // reading script
+			i.Script = make([]byte, i.SciptLen)
+			file.Read(i.Script) // reading script
 
-			i.sequence = make([]byte, 4)
-			file.Read(i.sequence) // reading sequence
+			i.Sequence = make([]byte, 4)
+			file.Read(i.Sequence) // reading sequence
 
-			t.inputs = append(t.inputs, i)
+			t.Inputs = append(t.Inputs, i)
 		}
 
-		t.outCount = ReadVarInt(file)
+		t.OutCount = ReadVarInt(file)
 
 		// -----------  OUTPUTS  ----------- //
 
-		for i := 0; i < t.outCount; i++ {
+		for i := 0; i < t.OutCount; i++ {
 
-			var o txOut
+			var o TxOut
 
 			data = make([]byte, 8)
 			file.Read(data)                            // Tx out index
-			o.value = binary.LittleEndian.Uint64(data) // 1e-8 (satoshi)
+			o.Value = binary.LittleEndian.Uint64(data) // 1e-8 (satoshi)
 
-			o.scriptLen = ReadVarInt(file)
+			o.ScriptLen = ReadVarInt(file)
 
-			data = make([]byte, o.scriptLen)
+			data = make([]byte, o.ScriptLen)
 			file.Read(data) // reading script
-			o.script = data
+			o.Script = data
 
-			t.outputs = append(t.outputs, o)
+			t.Outputs = append(t.Outputs, o)
 		}
 
 		data = make([]byte, 4)
 		file.Read(data) // reading locktime
-		t.lockTime = binary.LittleEndian.Uint32(data)
+		t.LockTime = binary.LittleEndian.Uint32(data)
 
-		b.transactions = append(b.transactions, t)
+		b.Transactions = append(b.Transactions, t)
 	}
 	return b, nil
 }

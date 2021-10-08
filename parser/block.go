@@ -1,14 +1,14 @@
 package parser
 
-type block struct {
+type Block struct {
 	// magicBytes     []byte
-	blockSize      uint32
-	version        uint32 //
-	hashPrevBlock  []byte //
-	hashMerkleRoot []byte // Block
-	time           uint32 // Header
-	bits           uint32 //
-	nonce          uint32 //
-	tCount         int
-	transactions   []transaction
+	BlockSize      uint32        `json:"size"`
+	Version        uint32        `json:"ver"`
+	HashPrevBlock  []byte        `json:"prev_block"`
+	HashMerkleRoot []byte        `json:"mrkl_root"`
+	Time           uint32        `json:"time"`
+	Bits           uint32        `json:"bits"`
+	Nonce          uint32        `json:"nonce"`
+	TCount         int           `json:"n_tx"`
+	Transactions   []Transaction `json:"tx"`
 }

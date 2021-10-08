@@ -1,15 +1,16 @@
 package main
 
 import (
-	"block-parser/parser"
+	"encoding/json"
 	"fmt"
 	"os"
+
+	"github.com/msgul/btcbp/parser"
 )
 
 func main() {
-	// main network magic bytes
+	// bitcoin main network magic bytes
 	magicBytes := []byte{249, 190, 180, 217}
-	fmt.Print(magicBytes)
 
 	// opening blk*.dat file
 	file, err := os.Open("blocks/blk00000.dat")
@@ -17,9 +18,15 @@ func main() {
 		panic(err)
 	}
 
-	firstBlock, err := parser.ParseBlock(file, magicBytes) // parsing first block
-	fmt.Print(firstBlock)
+	block, err := parser.ParseBlock(file, magicBytes) // parsing first block
 
-	parser.ReverseBytes(magicBytes)
+	b, err := json.MarshalIndent(block, "", "  ")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	fmt.Println(string(b))
+
 	defer file.Close()
 }
